@@ -81,15 +81,15 @@ try {
 ?>
 ```
 
-Usage
-=====
+Documentation
+=============
 
-Developer documentation: <https://www.logintc.com/developers/connectors/web.html>
+See <https://www.logintc.com/docs>
 
 Help
 ====
 
-Email support@cyphercor.com
+Email: <support@cyphercor.com>
 
 <https://www.logintc.com>
 
