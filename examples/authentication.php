@@ -1,23 +1,3 @@
-Introduction
-============
-
-The LoginTC PHP client is a complete LoginTC [REST API][rest-api] client to
-manage LoginTC organizations, users, domains, tokens and to create login
-sessions.
-
-This package allows a developer to quickly add multi-factor authentication to their web or portal login forms.
-
-Installation
-============
-
-Get the code:
-
-    git clone git@github.com:logintc/logintc-php
-    
-Example
-=======
-
-```php
 <?php
 
 require_once('LoginTC.php');
@@ -79,18 +59,3 @@ try {
 
 
 ?>
-```
-
-Usage
-=====
-
-Developer documentation: <https://www.logintc.com/developers/connectors/web.html>
-
-Help
-====
-
-Email support@cyphercor.com
-
-<https://www.logintc.com>
-
-[rest-api]: https://www.logintc.com/docs/rest-api
