@@ -20,7 +20,10 @@ try {
     $domain_id = 'YOUR_DOMAIN_ID';
     $username = 'usertest';
 
-    $session = $logintc->createSessionWithUsername($domain_id, $username);
+    $domainAttribute = new DomainAttribute("Disclaimer", "Unauthorized access or use of this site (and any connected systems data) is prohibited");
+    $attributes = array($domainAttribute);
+
+    $session = $logintc->createSessionWithUsername($domain_id, $username, $attributes);
 
     /*
      * poll the state of the session

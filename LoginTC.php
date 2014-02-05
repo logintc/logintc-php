@@ -8,6 +8,7 @@ if (!function_exists('json_decode')) {
 }
 
 require_once('AdminRestClient.php');
+require_once('resource/DomainAttribute.php');
 require_once('resource/User.php');
 require_once('resource/Token.php');
 require_once('resource/Session.php');
@@ -60,7 +61,7 @@ class LoginTC {
     /**
      * Client version used for user agent.
      */
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
 
     /**
      * The default LoginTC Admin.
@@ -274,8 +275,8 @@ class LoginTC {
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSession($domain_id, $user_id) {
-        $body = json_encode(array('user' => array('id' => $user_id), 'attributes' => array()));
+    public function createSession($domain_id, $user_id, $attributes = array()) {
+        $body = json_encode(array('user' => array('id' => $user_id), 'attributes' => $attributes));
 
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
@@ -295,9 +296,9 @@ class LoginTC {
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSessionWithUsername($domain_id, $username) {
-        $body = json_encode(array('user' => array('username' => $username), 'attributes' => array()));
-
+    public function createSessionWithUsername($domain_id, $username, $attributes = array()) {
+        $body = json_encode(array('user' => array('username' => $username), 'attributes' => $attributes));
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
@@ -354,9 +355,8 @@ class LoginTC {
                 $error = $response->errors[0];
                 return new ApiLoginTCException($error->code, $error->message);
             }
-        } else {
-            return new LoginTCException($exception->getMessage());
         }
+        return new LoginTCException($exception->getMessage());
     }
 }
 

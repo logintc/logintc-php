@@ -22,6 +22,7 @@ Example
 
 require_once('LoginTC.php');
 require_once('resource/Session.php');
+require_once('resource/DomainAttribute.php');
 
 try {
 
@@ -39,8 +40,11 @@ try {
 
     $domain_id = 'YOUR_DOMAIN_ID';
     $username = 'usertest';
+    
+    $domainAttribute = new DomainAttribute("Disclaimer", "Unauthorized access or use of this site (and any connected systems data) is prohibited");
+    $attributes = array($domainAttribute);
 
-    $session = $logintc->createSessionWithUsername($domain_id, $username);
+    $session = $logintc->createSessionWithUsername($domain_id, $username, $attributes);
 
     /*
      * poll the state of the session
