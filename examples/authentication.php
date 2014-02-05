@@ -1,7 +1,6 @@
 <?php
 
 require_once('LoginTC.php');
-require_once('resource/Session.php');
 
 try {
 

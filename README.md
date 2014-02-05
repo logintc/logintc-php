@@ -21,8 +21,6 @@ Example
 <?php
 
 require_once('LoginTC.php');
-require_once('resource/Session.php');
-require_once('resource/DomainAttribute.php');
 
 try {
 
