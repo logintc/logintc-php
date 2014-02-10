@@ -66,17 +66,21 @@ class LoginTC {
     /**
      * The default LoginTC Admin.
      */
-    const API_URL = 'https://cloud.logintc.com';
+    const DEFAULT_HOST = 'cloud.logintc.com';
 
     /**
      * The LoginTC Admin HTTP client.
      */
     protected $adminRestClient;
 
-    public function __construct($api_key) {
+    public function __construct($api_key, $host = self::DEFAULT_HOST) {
         $user_agent = self::NAME . '/' . self::VERSION;
 
-        $this->adminRestClient = new AdminRestClient(self::API_URL, $api_key, $user_agent);
+        if (!preg_match('/^https:\/\//', $host)) {
+            $host = "https://" . $host;
+        }
+
+        $this->adminRestClient = new AdminRestClient($host, $api_key, $user_agent);
     }
 
     /**
@@ -298,7 +302,7 @@ class LoginTC {
      */
     public function createSessionWithUsername($domain_id, $username, $attributes = array()) {
         $body = json_encode(array('user' => array('username' => $username), 'attributes' => $attributes));
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
