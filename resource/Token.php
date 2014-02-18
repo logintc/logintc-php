@@ -56,6 +56,3 @@ class Token {
         return $this->code;
     }
 }
-
-
-?>

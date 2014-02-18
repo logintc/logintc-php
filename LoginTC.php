@@ -363,5 +363,3 @@ class LoginTC {
         return new LoginTCException($exception->getMessage());
     }
 }
-
-?>
