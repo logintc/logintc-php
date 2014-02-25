@@ -12,7 +12,7 @@ Installation
 
 Get the code:
 
-    git clone git@github.com:logintc/logintc-php
+    git clone https://github.com/logintc/logintc-php.git
     
 Example
 =======
