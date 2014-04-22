@@ -250,7 +250,7 @@ class LoginTC {
             throw $this->createException($e);
         }
 
-        return $response;
+        return Token::fromObject($response);
     }
 
     /**
