@@ -1,5 +1,4 @@
 <?php
-
 if (!function_exists('curl_init')) {
     throw new Exception('LoginTC requires the CURL PHP extension.');
 }
@@ -7,11 +6,13 @@ if (!function_exists('json_decode')) {
     throw new Exception('LoginTC  needs the JSON PHP extension.');
 }
 
-require_once('AdminRestClient.php');
-require_once('resource/DomainAttribute.php');
-require_once('resource/User.php');
-require_once('resource/Token.php');
-require_once('resource/Session.php');
+require_once 'AdminRestClient.php';
+require_once 'resource/DomainAttribute.php';
+require_once 'resource/User.php';
+require_once 'resource/Token.php';
+require_once 'resource/Session.php';
+require_once 'resource/Organization.php';
+require_once 'resource/Domain.php';
 
 /**
  * A generic LoginTC client exception.
@@ -21,21 +22,19 @@ class LoginTCException extends Exception {
     public function __construct($message) {
         parent::__construct($message);
     }
-
 }
 
 /**
  * Exception for failures because of API.
  */
 class ApiLoginTCException extends LoginTCException {
-
     private $error_code;
     private $error_message;
 
     function __construct($error_code, $error_message) {
         $this->error_code = $error_code;
         $this->error_message = $error_message;
-
+        
         parent::__construct($this->error_code . ': ' . $error_message);
     }
 
@@ -52,22 +51,22 @@ class ApiLoginTCException extends LoginTCException {
  * LoginTC Admin client to manage LoginTC users, domains, tokens and sessions.
  */
 class LoginTC {
-
+    
     /**
      * Client name used for user agent.
      */
     const NAME = 'LoginTC-PHP';
-
+    
     /**
      * Client version used for user agent.
      */
-    const VERSION = '1.1.0';
-
+    const VERSION = '1.2.0';
+    
     /**
      * The default LoginTC Admin.
      */
     const DEFAULT_HOST = 'cloud.logintc.com';
-
+    
     /**
      * The LoginTC Admin HTTP client.
      */
@@ -75,11 +74,11 @@ class LoginTC {
 
     public function __construct($api_key, $host = self::DEFAULT_HOST) {
         $user_agent = self::NAME . '/' . self::VERSION;
-
+        
         if (!preg_match('/^https:\/\//', $host)) {
             $host = "https://" . $host;
         }
-
+        
         $this->adminRestClient = new AdminRestClient($host, $api_key, $user_agent);
     }
 
@@ -96,7 +95,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return User::fromObject($response);
     }
 
@@ -110,14 +109,18 @@ class LoginTC {
      * @throws LoginTCException
      */
     public function createUser($username, $name, $email) {
-        $body = json_encode(array('username' => $username,  'name' => $name, 'email' => $email));
-
+        $body = json_encode(array(
+                'username' => $username,
+                'name' => $name,
+                'email' => $email
+        ));
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/users', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return User::fromObject($response);
     }
 
@@ -131,14 +134,17 @@ class LoginTC {
      * @throws LoginTCException
      */
     public function updateUser($user_id, $name, $email) {
-        $body = json_encode(array('name' => $name, 'email' => $email));
-
+        $body = json_encode(array(
+                'name' => $name,
+                'email' => $email
+        ));
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/users/' . $user_id, $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return User::fromObject($response);
     }
 
@@ -165,7 +171,7 @@ class LoginTC {
      */
     public function addDomainUser($domain_id, $user_id) {
         $body = null;
-
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id, $body));
         } catch (Exception $e) {
@@ -174,11 +180,10 @@ class LoginTC {
     }
 
     /**
-     * Set a domain's users. If the provided users do not yet exist then they
-     * will be created in the Organization. Existing organization users will be
-     * added to the domain. The existing domain users that are not present in
-     * the users parameter will be removed from the domain and their tokens will
-     * be revoked.
+     * Set a domain's users. If the provided users do not yet exist then they will be created in the
+     * Organization. Existing organization users will be added to the domain. The existing domain
+     * users that are not present in the users parameter will be removed from the domain and their
+     * tokens will be revoked.
      *
      * @param domainId The target domain identifier.
      * @param users A list of users that should belong to the domain.
@@ -187,10 +192,14 @@ class LoginTC {
     public function setDomainUsers($domain_id, $users) {
         $user_array = array();
         foreach ($users as $user) {
-            array_push($user_array, array('username' => $user->getUsername(), 'name' => $user->getName(), 'email' => $user->getEmail()));
+            array_push($user_array, array(
+                    'username' => $user->getUsername(),
+                    'name' => $user->getName(),
+                    'email' => $user->getEmail()
+            ));
         }
         $body = json_encode($user_array);
-
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users', $body));
         } catch (Exception $e) {
@@ -214,8 +223,8 @@ class LoginTC {
     }
 
     /**
-     * Create a user token if one does not exist or if it has been revoked. Does
-     * nothing if the token is already active or not yet loaded.
+     * Create a user token if one does not exist or if it has been revoked. Does nothing if the
+     * token is already active or not yet loaded.
      *
      * @param domainId The target domain identifier.
      * @param userId The target user identifier.
@@ -224,19 +233,19 @@ class LoginTC {
      */
     public function createUserToken($domain_id, $user_id) {
         $body = null;
-
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id . '/token', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return Token::fromObject($response);
     }
 
     /**
-     * Gets a user's token information. Throws a LoginTCException if a token
-     * does not exist or has been revoked.
+     * Gets a user's token information. Throws a LoginTCException if a token does not exist or has
+     * been revoked.
      *
      * @param domainId The target domain identifier.
      * @param userId The target user identifier.
@@ -249,7 +258,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return Token::fromObject($response);
     }
 
@@ -273,21 +282,26 @@ class LoginTC {
      *
      * @param domainId The target domain identifier.
      * @param userId The target user identifier.
-     * @param attributes Map of attributes to be included in the LoginTC
-     *            request. Null is permitted for no attributes.
+     * @param attributes Map of attributes to be included in the LoginTC request. Null is permitted
+     *            for no attributes.
      * @return Newly created session.
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
     public function createSession($domain_id, $user_id, $attributes = array()) {
-        $body = json_encode(array('user' => array('id' => $user_id), 'attributes' => $attributes));
-
+        $body = json_encode(array(
+                'user' => array(
+                        'id' => $user_id
+                ),
+                'attributes' => $attributes
+        ));
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return Session::fromObject($response);
     }
 
@@ -301,14 +315,19 @@ class LoginTC {
      * @throws LoginTCException
      */
     public function createSessionWithUsername($domain_id, $username, $attributes = array()) {
-        $body = json_encode(array('user' => array('username' => $username), 'attributes' => $attributes));
-
+        $body = json_encode(array(
+                'user' => array(
+                        'username' => $username
+                ),
+                'attributes' => $attributes
+        ));
+        
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return Session::fromObject($response);
     }
 
@@ -326,7 +345,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-
+        
         return Session::fromObject($response);
     }
 
@@ -347,19 +366,86 @@ class LoginTC {
 
     protected function jsonResponse($server_output) {
         $response = json_decode($server_output);
-
+        
         return $response;
     }
 
     private function createException($exception) {
         if (is_a($exception, 'RestAdminRestClientException')) {
             $response = json_decode($exception->getBody());
-
+            
             if (isset($response->errors) != null && count($response->errors) > 0) {
                 $error = $response->errors[0];
                 return new ApiLoginTCException($error->code, $error->message);
             }
         }
         return new LoginTCException($exception->getMessage());
+    }
+
+    /**
+     * Get Ping status.
+     *
+     * @return Status (true if OK).
+     * @throws LoginTCException
+     */
+    public function getPing() {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/ping'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        if ($response->status == 'OK') {
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
+    public function getOrganization() {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/organization'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        return Organization::fromObject($response);
+    }
+
+    public function getDomain($domain_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/domains/' . $domain_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        return Domain::fromObject($response);
+    }
+
+    public function getDomainImage($domain_id) {
+        try {
+            $response = $this->adminRestClient->get_bytes('/api/domains/' . $domain_id . '/image', 'image/png');
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        return $response;
+    }
+
+    public function getDomainUser($domain_id, $user_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/domains/' . $domain_id . '/users/' . $user_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        return User::fromObject($response);
+    }
+
+    public function getDomainUsers($domain_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/domains/' . $domain_id . '/users'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        foreach ($response as $user) {
+            $users[] = User::fromObject($user);
+        }
+        return $users;
     }
 }
