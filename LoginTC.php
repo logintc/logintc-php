@@ -60,7 +60,7 @@ class LoginTC {
     /**
      * Client version used for user agent.
      */
-    const VERSION = '1.2.0';
+    const VERSION = '1.2.1';
     
     /**
      * The default LoginTC Admin.
@@ -288,13 +288,23 @@ class LoginTC {
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSession($domain_id, $user_id, $attributes = array()) {
-        $body = json_encode(array(
-                'user' => array(
-                        'id' => $user_id
-                ),
-                'attributes' => $attributes
-        ));
+    public function createSession($domain_id, $user_id, $attributes = array(), $ip_address = NULL, $bypass_code = NULL) {
+        $body_arr = array(
+                        'user' => array(
+                            'id' => $user_id
+                        ),
+                        'attributes' => $attributes
+                    );
+        
+        if (!is_null($ip_address)) {
+            $body_arr['ipAddress'] = $ip_address;
+        }
+
+        if (!is_null($bypass_code)) {
+            $body_arr['bypasscode'] = $bypass_code;
+        }
+
+        $body = json_encode($body_arr);
         
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
@@ -314,13 +324,23 @@ class LoginTC {
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSessionWithUsername($domain_id, $username, $attributes = array()) {
-        $body = json_encode(array(
-                'user' => array(
-                        'username' => $username
-                ),
-                'attributes' => $attributes
-        ));
+    public function createSessionWithUsername($domain_id, $username, $attributes = array(), $ip_address = NULL, $bypass_code = NULL) {
+        $body_arr = array(
+                        'user' => array(
+                            'username' => $username
+                        ),
+                        'attributes' => $attributes
+                    );
+        
+        if (!is_null($ip_address)) {
+            $body_arr['ipAddress'] = $ip_address;
+        }
+
+        if (!is_null($bypass_code)) {
+            $body_arr['bypasscode'] = $bypass_code;
+        }
+
+        $body = json_encode($body_arr);
         
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
