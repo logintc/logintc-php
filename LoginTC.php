@@ -13,6 +13,7 @@ require_once 'resource/Token.php';
 require_once 'resource/Session.php';
 require_once 'resource/Organization.php';
 require_once 'resource/Domain.php';
+require_once 'resource/BypassCode.php';
 
 /**
  * A generic LoginTC client exception.
@@ -34,7 +35,7 @@ class ApiLoginTCException extends LoginTCException {
     function __construct($error_code, $error_message) {
         $this->error_code = $error_code;
         $this->error_message = $error_message;
-        
+
         parent::__construct($this->error_code . ': ' . $error_message);
     }
 
@@ -51,22 +52,22 @@ class ApiLoginTCException extends LoginTCException {
  * LoginTC Admin client to manage LoginTC users, domains, tokens and sessions.
  */
 class LoginTC {
-    
+
     /**
      * Client name used for user agent.
      */
     const NAME = 'LoginTC-PHP';
-    
+
     /**
      * Client version used for user agent.
      */
-    const VERSION = '1.2.1';
-    
+    const VERSION = '1.2.2';
+
     /**
      * The default LoginTC Admin.
      */
     const DEFAULT_HOST = 'cloud.logintc.com';
-    
+
     /**
      * The LoginTC Admin HTTP client.
      */
@@ -74,11 +75,11 @@ class LoginTC {
 
     public function __construct($api_key, $host = self::DEFAULT_HOST) {
         $user_agent = self::NAME . '/' . self::VERSION;
-        
+
         if (!preg_match('/^https:\/\//', $host)) {
             $host = "https://" . $host;
         }
-        
+
         $this->adminRestClient = new AdminRestClient($host, $api_key, $user_agent);
     }
 
@@ -95,7 +96,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return User::fromObject($response);
     }
 
@@ -114,13 +115,13 @@ class LoginTC {
                 'name' => $name,
                 'email' => $email
         ));
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/users', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return User::fromObject($response);
     }
 
@@ -138,13 +139,13 @@ class LoginTC {
                 'name' => $name,
                 'email' => $email
         ));
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/users/' . $user_id, $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return User::fromObject($response);
     }
 
@@ -171,7 +172,7 @@ class LoginTC {
      */
     public function addDomainUser($domain_id, $user_id) {
         $body = null;
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id, $body));
         } catch (Exception $e) {
@@ -199,7 +200,7 @@ class LoginTC {
             ));
         }
         $body = json_encode($user_array);
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users', $body));
         } catch (Exception $e) {
@@ -233,13 +234,13 @@ class LoginTC {
      */
     public function createUserToken($domain_id, $user_id) {
         $body = null;
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id . '/token', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return Token::fromObject($response);
     }
 
@@ -258,7 +259,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return Token::fromObject($response);
     }
 
@@ -292,10 +293,10 @@ class LoginTC {
         $body_arr = array(
                         'user' => array(
                             'id' => $user_id
-                        ),
+        ),
                         'attributes' => $attributes
-                    );
-        
+        );
+
         if (!is_null($ip_address)) {
             $body_arr['ipAddress'] = $ip_address;
         }
@@ -305,13 +306,13 @@ class LoginTC {
         }
 
         $body = json_encode($body_arr);
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return Session::fromObject($response);
     }
 
@@ -328,10 +329,10 @@ class LoginTC {
         $body_arr = array(
                         'user' => array(
                             'username' => $username
-                        ),
+        ),
                         'attributes' => $attributes
-                    );
-        
+        );
+
         if (!is_null($ip_address)) {
             $body_arr['ipAddress'] = $ip_address;
         }
@@ -341,13 +342,13 @@ class LoginTC {
         }
 
         $body = json_encode($body_arr);
-        
+
         try {
             $response = $this->jsonResponse($this->adminRestClient->post('/api/domains/' . $domain_id . '/sessions', $body));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return Session::fromObject($response);
     }
 
@@ -365,7 +366,7 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-        
+
         return Session::fromObject($response);
     }
 
@@ -382,24 +383,6 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-    }
-
-    protected function jsonResponse($server_output) {
-        $response = json_decode($server_output);
-        
-        return $response;
-    }
-
-    private function createException($exception) {
-        if (is_a($exception, 'RestAdminRestClientException')) {
-            $response = json_decode($exception->getBody());
-            
-            if (isset($response->errors) != null && count($response->errors) > 0) {
-                $error = $response->errors[0];
-                return new ApiLoginTCException($error->code, $error->message);
-            }
-        }
-        return new LoginTCException($exception->getMessage());
     }
 
     /**
@@ -467,5 +450,76 @@ class LoginTC {
             $users[] = User::fromObject($user);
         }
         return $users;
+    }
+
+    public function getBypassCode($bypass_code_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/bypasscodes/' . $bypass_code_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return BypassCode::fromObject($response);
+    }
+
+    public function getBypassCodes($user_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/users/' . $user_id . '/bypasscodes'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        foreach ($response as $bypass_code) {
+            $bypass_codes[] = BypassCode::fromObject($bypass_code);
+        }
+        return $bypass_codes;
+    }
+
+    public function createBypassCode($user_id, $uses_allowed = 1, $expiration_time = 0) {
+        $body = json_encode(array(
+                'usesAllowed' => $uses_allowed,
+                'expirationTime' => $expiration_time
+        ));
+
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->post('/api/users/' . $user_id . '/bypasscodes', $body));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return BypassCode::fromObject($response);
+    }
+
+    public function deleteBypassCode($bypass_code_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->delete('/api/bypasscodes/' . $bypass_code_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+    }
+
+    public function deleteBypassCodes($user_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->delete('/api/users/' . $user_id . '/bypasscodes'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+    }
+
+    protected function jsonResponse($server_output) {
+        $response = json_decode($server_output);
+
+        return $response;
+    }
+
+    private function createException($exception) {
+        if (is_a($exception, 'RestAdminRestClientException')) {
+            $response = json_decode($exception->getBody());
+
+            if (isset($response->errors) != null && count($response->errors) > 0) {
+                $error = $response->errors[0];
+                return new ApiLoginTCException($error->code, $error->message);
+            }
+        }
+        return new LoginTCException($exception->getMessage());
     }
 }

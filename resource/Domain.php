@@ -11,6 +11,11 @@ class Domain {
     private $name;
     private $type;
     private $keyType;
+    private $maxAllowedRetries;
+    private $requestTimeout;
+    private $activationCodeExpiration;
+    private $requestPollingEnabled;
+    private $bypassEnabled;
 
     /**
      *
@@ -18,12 +23,22 @@ class Domain {
      * @param name The domain real name
      * @param type The domain type
      * @param keyType The domain keyType
+     * @param maxAllowedRetries Number of invalid retries allowed before token is revoked
+     * @param requestTimeout Timeout of a request in seconds
+     * @param activationCodeExpiration Activation code expiration in days
+     * @param requestPollingEnabled Whether request polling is enabled
+     * @param bypassEnabled Whether bypass codes are enabled
      */
-    public function __construct($id, $name, $type, $keyType) {
+    public function __construct($id, $name, $type, $keyType, $maxAllowedRetries, $requestTimeout, $activationCodeExpiration, $requestPollingEnabled, $bypassEnabled) {
         $this->id = $id;
         $this->name = $name;
         $this->type = $type;
         $this->keyType = $keyType;
+        $this->maxAllowedRetries = $maxAllowedRetries;
+        $this->requestTimeout = $requestTimeout;
+        $this->activationCodeExpiration = $activationCodeExpiration;
+        $this->requestPollingEnabled = $requestPollingEnabled;
+        $this->bypassEnabled = $bypassEnabled;
     }
 
     /**
@@ -43,7 +58,22 @@ class Domain {
         if (!isset($object->keyType)) {
             return null;
         }
-        return new Domain($object->id, $object->name, $object->type, $object->keyType);
+        if (!isset($object->maxAllowedRetries)) {
+            return null;
+        }
+        if (!isset($object->requestTimeout)) {
+            return null;
+        }
+        if (!isset($object->activationCodeExpiration)) {
+            return null;
+        }
+        if (!isset($object->requestPollingEnabled)) {
+            return null;
+        }
+        if (!isset($object->bypassEnabled)) {
+            return null;
+        }
+        return new Domain($object->id, $object->name, $object->type, $object->keyType, $object->maxAllowedRetries, $object->requestTimeout, $object->activationCodeExpiration, $object->requestPollingEnabled, $object->bypassEnabled);
     }
 
     public function setId($id) {
@@ -76,5 +106,25 @@ class Domain {
 
     public function getKeyType() {
         return $this->keyType;
+    }
+
+    public function getMaxAllowedRetries() {
+        return $this->maxAllowedRetries;
+    }
+
+    public function getRequestTimeout() {
+        return $this->requestTimeout;
+    }
+
+    public function getActivationCodeExpiration() {
+        return $this->activationCodeExpiration;
+    }
+
+    public function getRequestPollingEnabled() {
+        return $this->requestPollingEnabled;
+    }
+
+    public function getBypassEnabled() {
+        return $this->bypassEnabled;
     }
 }
