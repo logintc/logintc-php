@@ -14,6 +14,7 @@ class User {
     private $name;
     private $domains;
     private $bypass_codes;
+    private $hardware;
 
     /**
      *
@@ -22,14 +23,16 @@ class User {
      * @param email The user's email address.
      * @param domains The user's domain memberships.
      * @param bypass_codes The user's bypass codes.
+     * @param hardware The user's hardware token.
      */
-    public function __construct($username, $name, $email, $domains, $bypass_codes) {
+    public function __construct($username, $name, $email, $domains, $bypass_codes, $hardware) {
         $this->id = null;
         $this->username = $username;
         $this->email = $email;
         $this->name = $name;
         $this->domains = $domains;
         $this->bypass_codes = $bypass_codes;
+        $this->hardware = $hardware;
     }
 
     /**
@@ -40,8 +43,8 @@ class User {
      * @param name The user's real name (or optionally username).
      * @param domains The user's domain memberships.
      */
-    public static function withId($id, $username, $name, $email, $domains, $bypass_codes) {
-        $user = new User($username, $name, $email, $domains, $bypass_codes);
+    public static function withId($id, $username, $name, $email, $domains, $bypass_codes, $hardware) {
+        $user = new User($username, $name, $email, $domains, $bypass_codes, $hardware);
         $user->setId($id);
 
         return $user;
@@ -75,7 +78,11 @@ class User {
             $object_bypass_codes = $object->bypasscodes;
         }
 
-        return User::withId($object->id, $object->username, $object->name, $object->email, $object->domains, $object_bypass_codes);
+        if (!isset($object->hardware)) {
+            return null;
+        }
+
+        return User::withId($object->id, $object->username, $object->name, $object->email, $object->domains, $object_bypass_codes, $object->hardware);
     }
 
     protected function setId($id) {

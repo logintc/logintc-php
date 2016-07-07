@@ -14,6 +14,7 @@ require_once 'resource/Session.php';
 require_once 'resource/Organization.php';
 require_once 'resource/Domain.php';
 require_once 'resource/BypassCode.php';
+require_once 'resource/HardwareToken.php';
 
 /**
  * A generic LoginTC client exception.
@@ -289,7 +290,7 @@ class LoginTC {
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSession($domain_id, $user_id, $attributes = array(), $ip_address = NULL, $bypass_code = NULL) {
+    public function createSession($domain_id, $user_id, $attributes = array(), $ip_address = NULL, $bypass_code = NULL, $otp = NULL) {
         $body_arr = array(
                         'user' => array(
                             'id' => $user_id
@@ -303,6 +304,8 @@ class LoginTC {
 
         if (!is_null($bypass_code)) {
             $body_arr['bypasscode'] = $bypass_code;
+        } else if (!is_null($otp)) {
+            $body_arr['otp'] = $otp;
         }
 
         $body = json_encode($body_arr);
@@ -321,11 +324,15 @@ class LoginTC {
      *
      * @param domainId The target domain identifier.
      * @param username The target user username.
+     * @param attributes Array of text based request attributes.
+     * @param ip_address IP Address of originating request.
+     * @param bypass_code Optional Bypass Code.
+     * @param otp Optional OTP.
      * @return Newly created session.
      * @throws NoTokenLoginTCException
      * @throws LoginTCException
      */
-    public function createSessionWithUsername($domain_id, $username, $attributes = array(), $ip_address = NULL, $bypass_code = NULL) {
+    public function createSessionWithUsername($domain_id, $username, $attributes = array(), $ip_address = NULL, $bypass_code = NULL, $otp = NULL) {
         $body_arr = array(
                         'user' => array(
                             'username' => $username
@@ -339,6 +346,8 @@ class LoginTC {
 
         if (!is_null($bypass_code)) {
             $body_arr['bypasscode'] = $bypass_code;
+        } else if(!is_null($otp)) {
+            $body_arr['otp'] = $otp;
         }
 
         $body = json_encode($body_arr);
@@ -500,6 +509,102 @@ class LoginTC {
     public function deleteBypassCodes($user_id) {
         try {
             $response = $this->jsonResponse($this->adminRestClient->delete('/api/users/' . $user_id . '/bypasscodes'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+    }
+
+    public function getHardwareToken($hardware_token_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/hardware/' . $hardware_token_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return HardwareToken::fromObject($response);
+    }
+
+    public function getUserHardwareToken($user_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/users/' . $user_id . '/hardware'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+var_dump($response);
+
+        return HardwareToken::fromObject($response);
+    }
+
+    public function getHardwareTokens() {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/hardware'));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        foreach ($response as $hardware_token) {
+            $hardware_tokens[] = HardwareToken::fromObject($hardware_token);
+        }
+        return $hardware_tokens;
+    }
+
+    public function createHardwareToken($alias, $serialNumber, $type, $timeStep, $seed) {
+        $body_arr = array(
+                'serialNumber' => $serialNumber,
+                'type' => $type,
+                'timeStep' => $timeStep,
+                'seed' => $seed
+        );
+
+        if (!is_null($alias)) {
+            $body_arr['alias'] = $alias;
+        }
+
+        $body = json_encode($body_arr);
+
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->post('/api/hardware', $body));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return HardwareToken::fromObject($response);
+    }
+
+    public function updateHardwareToken($hardware_token_id, $alias) {
+        $body = json_encode(array(
+                'alias' => $alias
+        ));
+
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->put('/api/hardware/' . $hardware_token_id, $body));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return HardwareToken::fromObject($response);
+    }
+
+    public function deleteHardwareToken($hardware_token_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->delete('/api/hardware/' . $hardware_token_id));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+    }
+
+    public function associateHardwareToken($user_id, $hardware_token_id) {
+        $body = null;
+
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->put('/api/users/' . $user_id . '/hardware/' . $hardware_token_id, $body));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+    }
+
+    public function disassociateHardwareToken($user_id) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->delete('/api/users/' . $user_id . '/hardware'));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
