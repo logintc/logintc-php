@@ -172,7 +172,7 @@ class LoginTC {
      * @throws LoginTCException
      */
     public function addDomainUser($domain_id, $user_id) {
-        $body = null;
+        $body = '';
 
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id, $body));
@@ -234,7 +234,7 @@ class LoginTC {
      * @throws LoginTCException
      */
     public function createUserToken($domain_id, $user_id) {
-        $body = null;
+        $body = '';
 
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/domains/' . $domain_id . '/users/' . $user_id . '/token', $body));
@@ -530,7 +530,6 @@ class LoginTC {
         } catch (Exception $e) {
             throw $this->createException($e);
         }
-var_dump($response);
 
         return HardwareToken::fromObject($response);
     }
@@ -593,7 +592,7 @@ var_dump($response);
     }
 
     public function associateHardwareToken($user_id, $hardware_token_id) {
-        $body = null;
+        $body = '';
 
         try {
             $response = $this->jsonResponse($this->adminRestClient->put('/api/users/' . $user_id . '/hardware/' . $hardware_token_id, $body));
