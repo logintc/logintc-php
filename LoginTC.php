@@ -62,7 +62,7 @@ class LoginTC {
     /**
      * Client version used for user agent.
      */
-    const VERSION = '1.2.2';
+    const VERSION = '1.2.4';
 
     /**
      * The default LoginTC Admin.
@@ -99,6 +99,42 @@ class LoginTC {
         }
 
         return User::fromObject($response);
+    }
+
+    /**
+     * Get user info.
+     *
+     * @param username The user's username.
+     * @return The requested user.
+     * @throws LoginTCException
+     */
+    public function getUserByUsername($username) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/users?username=' . $username));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+
+        return User::fromObject($response);
+    }
+
+    /**
+     * Get users info.
+     *
+     * @param page number. (optional)
+     * @return The requested users.
+     * @throws LoginTCException
+     */
+    public function getUsers($page = 1) {
+        try {
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/users?page=' . $page));
+        } catch (Exception $e) {
+            throw $this->createException($e);
+        }
+        foreach ($response as $user) {
+            $users[] = User::fromObject($user);
+        }
+        return $users;
     }
 
     /**
@@ -449,9 +485,9 @@ class LoginTC {
         return User::fromObject($response);
     }
 
-    public function getDomainUsers($domain_id) {
+    public function getDomainUsers($domain_id, $page = 1) {
         try {
-            $response = $this->jsonResponse($this->adminRestClient->get('/api/domains/' . $domain_id . '/users'));
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/domains/' . $domain_id . '/users?page=' . $page));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
@@ -534,9 +570,9 @@ class LoginTC {
         return HardwareToken::fromObject($response);
     }
 
-    public function getHardwareTokens() {
+    public function getHardwareTokens($page = 1) {
         try {
-            $response = $this->jsonResponse($this->adminRestClient->get('/api/hardware'));
+            $response = $this->jsonResponse($this->adminRestClient->get('/api/hardware?page=' . $page));
         } catch (Exception $e) {
             throw $this->createException($e);
         }
